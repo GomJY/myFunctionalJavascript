@@ -51,16 +51,27 @@ test('L.range', 10, () => reduce(add, L.range(1000000)));
 
 // take ==========================================
 log("take ============");
-const take = (l, iter) => {
+const take = curry((l, iter) => {
   let res = [];
   for(const a of iter) {
     res.push(a);
     if(res.length == l) return res;
   }
   return res;
-};
+});
 
-log("take(...)", take(10, range(100)));
-log("take(...)", take(10, L.range(100)));
+log("take range(1000)==================");
+go(
+  range(1000),
+  take(5),
+  reduce(add),
+  log
+);
 
+log("take L.range(infinity)==================");
+go(
+  L.range(Infinity),
+  take(5),
+  reduce(add),
+  log);
 log("End");

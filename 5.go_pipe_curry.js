@@ -6,33 +6,32 @@ const products = [
   {name: '후드티', price: 30000},
   {name: '바지', price: 25000}
 ];
+const { reduce, map, filter, add } = require('./module');
 
-const map = (f, iter) => {
-  let res = [];
-  for(const p of iter) {
-    res.push(f(p));
-  }
-  return res;
-}
-const filter = (f, iter) => {
-  let res = [];
-  for(let item of iter) {
-    if(f(item)) res.push(item); 
-  }
-  return res;
-};
-const reduce = (f, acc, iter) => {
-  if(!iter) {
-    iter = acc[Symbol.iterator]();
-    acc = iter.next().value;
-  }
-  for(const value of iter) {
-    acc = f(acc, value);
-  }
-  return acc;
-};
+log("go==================");
+const go = (...args) => reduce((a, f) => f(a), args);
 
-log("");
-log("1.map ============");
+go(
+  0,
+  a => a + 1,
+  a => a + 10,
+  a => a + 100,
+  log
+);
 
-log("");
+
+log("pipe==================");
+const pipe = (f, ...fs) => (...as) => go(f(...as), ...fs);
+
+const f = pipe(
+  (a, b) => a + b,
+  c => c + 1,
+  c => c + 10,
+  c => c + 100);
+const f2 = pipe(
+  (a, b) => a + b,
+  c => c + 1,
+  c => c + 10,
+  c => c + 100);
+log(f(100, 0));
+log(f(1, 2));

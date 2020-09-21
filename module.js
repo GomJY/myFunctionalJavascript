@@ -32,12 +32,16 @@ const range = l => {
 };
 const add = (a, b) => a + b;
 
+
+const go = (...args) => reduce((a, f) => f(a), args);
+
 module.exports = {
   reduce,
   filter,
   map,
   range,
-  add
+  add,
+  go,
 }
 
 

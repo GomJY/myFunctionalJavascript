@@ -1,6 +1,3 @@
-# 총 수량, 총 가격
-### ex)
-```javascript
 const {reduce,filter,map,range,add,go,pipe,curry} = require('./module');
 const log = console.log;
 const products = [
@@ -24,4 +21,3 @@ const sum = (f, iter) => go(
 // log(sum(p => p.quantity, products));
 log(total_quantity(products));
 log(total_price(products));
-```

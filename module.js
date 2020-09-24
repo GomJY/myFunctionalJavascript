@@ -10,6 +10,7 @@ const map = curry((f, iter) => {
   }
   return res;
 });
+
 const filter = curry((f, iter) => {
   let res = [];
   for(let item of iter) {
@@ -28,6 +29,12 @@ const reduce = curry((f, acc, iter) => {
   return acc;
 });
 
+const add = (a, b) => a + b;
+
+const go = (...args) => reduce((a, f) => f(a), args);
+const pipe = (f, ...fs) => (...as) => go(f(...as), ...fs);
+
+
 const range = l => {
   let i = -1;
   let res = [];
@@ -36,11 +43,13 @@ const range = l => {
   }
   return res;
 };
-const add = (a, b) => a + b;
-
-
-const go = (...args) => reduce((a, f) => f(a), args);
-const pipe = (f, ...fs) => (...as) => go(f(...as), ...fs);
+const L = {};
+L.range = function *(l) {
+  let i = -1;
+  while(++i < l) {
+    yield i;
+  }
+}
 
 module.exports = {
   reduce,
@@ -50,7 +59,8 @@ module.exports = {
   add,
   go,
   pipe,
-  curry
+  curry,
+  L
 }
 
 

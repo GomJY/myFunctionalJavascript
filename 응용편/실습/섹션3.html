@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>## 객체를 이터러블 프로그래밍으로 다루기</title>
+  <script src="./fx.js"></script>
+</head>
+<body>
+</script>
+
+## 객체를 이터러블 프로그래밍으로 다루기
+
+<script>
+const obj1 = {
+  a: 1,
+  b: 2,
+  c: 3,
+  d: 4
+};
+</script>
+
+1.values
+<script>
+  console.log(Object.values(obj1));
+  L.values = function *(obj) {
+    for(const k in obj) {
+      console.log(k);
+      yield obj[k];
+    }
+  };
+
+  _.go(obj1,
+    L.values,
+    L.map(a => a + 10),
+    _.reduce((a, b) => a + b),
+    v => { console.log("_.go : ", v) }
+  );
+</script>
+
+2.entries
+<script>
+  L.entries = function *(obj) {
+    for (const k in obj) {
+      yield [k, obj[k]];
+    }
+  }
+  _.go(
+    obj1,
+    L.entries,
+
+    // L.filter(([_, v]) => v % 2),
+    // _.each(console.log)
+    
+    _.take(2),
+    // _.takeAll,
+    console.log
+  );
+</script>
+
+3.keys
+<script>
+  L.keys = function*(obj) {
+    for(const k in obj)
+      yield k;
+  }
+  _.go(
+    obj1,
+    L.keys,
+    _.each(console.log)
+  );
+</script>
+
+4.어떠한 값이든 이터러블 프로그래밍으로 다루기
+<script>
+  const g1 = function *(stop) {
+    let i = -1;
+    while(++i < stop){
+      console.log(i);
+      yield 10;
+      if(false) yield 20 + 30;
+      yield 30;
+    }
+  };
+  console.log([...L.take(3, g1(10))]);
+</script>
+
+5.object
+<script>
+  const a = [['a', 1], ['b', 2], ['c', 3]];
+  const b = {a:1, b:2, c:3};
+
+  // const object = entries => _.go(
+  //   entries,
+  //   L.map(([k, v]) => ({[k] : v})),
+  //   _.reduce(Object.assign)
+  // );
+  const object = entries =>
+    _.reduce((obj, [k, v]) => (obj[k] = v, obj), {}, entries);
+  console.log(object(a));
+
+  let m = new Map();
+  m.set('a', 10);
+  m.set('b', 20);
+  m.set('c', 30);
+  console.log(object(m));
+</script>
+
+6.mapObject
+<script>
+  const mapObject = (f, obj) => _.go(
+    obj,
+    L.entries,
+    L.map(([k ,v]) => [k, f(v)]),
+    object
+  );
+  console.log(mapObject(a => a + 10, { a: 1, b:2, c: 3}));
+  //{a : 11, b: 12, c: 13}
+</script>
+
+7.pick
+<script>
+  const obj2 = {
+    a: 1,
+    b: 2,
+    c: 3,
+    d: 4
+  };
+
+  const pick = (ks, obj) => _.go(
+    ks,
+    L.map(k => [k, obj[k]]),
+    L.reject(([k, v]) => v == undefined),
+    object
+    );
+  // //obj를 평가하는 방식 - 비효율적
+  // const pick = (keys, obj) => _.go(
+  //   obj,
+  //   L.entries,
+  //   L.filter(([k, v]) => keys.includes(k)),
+  //   object
+  // );
+  console.log(pick(['b', 'c'], obj2));
+  //{b: 2, c: 3}
+</script>
+
+8.indexBy
+<script>
+const users = [
+  { id: 5, name: 'AA', age: 35 },
+  { id: 10, name: 'BB', age: 26 },
+  { id: 19, name: 'CC', age: 28 },
+  { id: 23, name: 'CC', age: 34 },
+  { id: 24, name: 'EE', age: 23 }
+];
+_.indexBy = (f, iter) => _.reduce((obj, a) => (obj[f(a)] = a, obj), {}, iter);
+const users2 = _.indexBy(u => u.id, users);
+console.log(users2);
+</script>
+
+# 9.indexBy 된 값을 filter 하기
+<script>
+  console.log(_.filter(({age}) => age >= 30, users));
+  //[{age:35, id:5, name: 'AA'}, { id: 23, name: 'CC', age: 34 },]
+  
+  const indexBy_filter = (f, obj) => _.go(
+    obj,
+    L.entries,
+    L.filter(([_, v_obj]) => f(v_obj)),
+    object
+  );
+  console.log(_.filter(({age}) => age >= 30, users2));
+  console.log(indexBy_filter(({age}) => (age >= 30), users2));
+</script>
+</body>
+

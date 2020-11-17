@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>0/2 홀수 n 개 더하기</title>
+  <script src="./fx.js"></script>
+</head>
+<body>
+  1.map으로 합성하기
+
+  <script>
+    const f = x => x + 10;
+    const g = x => x - 5;
+    const fg = x => f(g(x));
+    
+    _.go(
+      [],
+      fg,
+      console.log
+      );
+    _.go(
+      10,
+      fg,
+      console.log
+      );
+    //15
+    //안전한 함수
+    _.go(
+      [],
+      L.map(fg),
+      _.each(console.log));
+      //출력되지 않음
+    _.go(
+      [10],
+      L.map(fg),
+      _.each(console.log));
+      //15
+  </script>
+
+2.find 대신 L.filter 써보기
+<script>
+const users = [
+  { name: 'AA', age: 35 },
+  // { name: 'BB', age: 26 },
+  { name: 'CC', age: 28 },
+  { name: 'CC', age: 34 },
+  { name: 'EE', age: 23 }
+];
+
+//L.filter X
+const user_BB = _.find(u => u.name == "BB", users);
+if(user_BB) {
+  console.log(user_BB.age);
+}
+
+//L.filter O
+const is_name = name => u => u.name == name;
+const get_age = user => user.age;
+
+_.go(users,
+  L.filter(is_name("BB")),
+  L.map(get_age),
+  L.take(1),
+  _.each(console.log)
+);
+</script>
+
+스스로 해보기
+행운 점수 뽑기 - 행운점수가 아래처럼 나오게 만들어주세요
+#0
+당신의 점수는 40점
+#1
+당신의 점수는 60점
+스코어는 A
+랜덤으로 받은 값이  50점이상이면 A 
+
+<script>
+const score = Math.floor(Math.random() * 100);
+console.log("당신의 점수는" + score + "점");
+  _.go(
+    [score],
+    L.filter(sc => (sc >= 50)),
+    L.take(1),
+    _.each(_ => console.log("스코어는 A입니다"))
+    );
+  console.log("끝");
+</script>
+
+</body>
+

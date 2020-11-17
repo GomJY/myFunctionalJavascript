@@ -6,151 +6,115 @@
   <script src="./fx.js"></script>
 </head>
 <body>
-# 함수형 프로그래밍과 JavaScript ES6+ 응용편
+  ## 명령형 습관 지우기 - 만능 reduce? No!
 
-## 이터러블 프로그래밍 혹은 리스트 프로세싱 (Lisp)
-
-1. 홀수 n개 더하기
-
+  1. reduce + 복잡한 함수 + acc 보다 map + 간단한 함수 + reduce
+  
 <script>
-  function f1(limit, list) {
-    let acc = 0;
-    for(const a of list) {
-      if(a % 2) {
-        const b = a * a;
-        acc += b;
-        if(--limit == 0) break;
-      }
-    }
-    console.log("f1_acc: ", acc);
-  }
-  f1(3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+const users = [
+  { name: 'AA', age: 35 },
+  { name: 'BB', age: 26 },
+  { name: 'CC', age: 28 },
+  { name: 'CC', age: 34 },
+  { name: 'EE', age: 23 }
+];
+console.log(
+  _.reduce((total, u) =>  total + u.age, 0, users)
+);
+
+const ages = L.map(u => u.age, users);
+const add = (a, b) => a + b;
+console.log(
+  _.reduce(add, ages)
+);
 </script>
 
-2.분별하기 filter : if(a%2)
-3.값 변화 후 변수 할당 map : const b = a * a
-4.갯수만큼 자르기 take : if(--limit == 0) break
-5.축약 및 합산 reduce : acc += b;
-
+2. reduce 하나 보다 map + filter + reduce
 <script>
-  function f2(limit, list) {
-    let result = 0;
-    const add = (a, b) => a + b;
-    result = _.go(list,
-      L.filter(a => a % 2),
-      L.map(a => a * a),
-      L.take(limit),
-      _.reduce(add),
-      console.log
-      // a => {console.log("f2_acc: ", a); result = a;}
-    );
-  }
-  f2(3, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-</script>
-
-6. while을 range로
-7. 효과를 each로 구분
-<script>
-  console.clear();
-  function f3(end) {
-    let i = 0;
-    while(i < end) {
-      console.log(i);
-      ++i;
-    }
-  }
-  f3(3);
-
-  function f4(end) {
-    _.each(a => {console.log("f4_...ing : ", a)}, L.range(end));
-  }
-  f4(10);
-</script>
-
-8.추억의 별 그리기
-<script>
-  const join = sep => _.reduce((a, b) => `${a}${sep}${b}`)
-  console.clear();
-  _.go(
-    _.range(1, 5),
-    _.map(_.range),
-    _.map(_.map( a => '*')),
-    _.map(join('')),
-    _.reduce((a, b) =>`${a}\n${b}`),
-    console.log
+  //나이가 30세 미만인 사람들의 나이만 구하겠다
+  console.log(
+    _.reduce(
+      (total, u) => u.age < 30 ? total + u.age : total,
+      0,      
+      users)
   );
 
-  _.go(
-    L.range(1, 5),
-    L.map(s => _.go(
-      L.range(s),
-      L.map (_ => "*"),
-      _.reduce((a, b) => `${a}${b}`),)),
-    _.reduce((a ,b) => `${a}\n${b}`),
-    console.log
-  );
+  console.log(
+    _.reduce(add,
+      L.filter(n => n < 30, 
+        L.map(u => u.age, users))));
 </script>
 
-9. 추억의 구구단
-<script>
-  _.go(
-  L.range(2, 10),
-  L.map(a => _.go(
-    L.range(1, 10),
-    L.map(b => `${a} x ${b} = ${a * b}`),
-    join('\n')
-  )),
-  join('\n\n'),
-  console.log,
-  );
-</script>
 
-스스로 해보기
-
-1. 피라미드 만들기
-  *
- ***
-*****
-층 : N
-
-가장 큰 갯수(max) : N * 2 - 1
-
-찍을 위치
-12345
-  3
- 234
-12345
-
-5 - (3 - 1) = 3
-
-3 - 2 = 1
-5 - (3 - 2) = 4
-1 < 2층 값 <= 4
+3. query
 
 <script>
-  console.clear();
-  const isDrawPosition = (max_field, max_layer) => (position, now_layer) => {
-      let distance = max_layer - now_layer;
-      return position > distance && position <= max_field - distance;
-  };
-
-  function pyramid(layerNum, drawChar = "*") {
-    const filed = layerNum * 2 - 1;
-    const join = sep => _.reduce((a, b) => `${a}${sep}${b}`);
-    const my_isDrawPosition = isDrawPosition(filed, layerNum);
-    _.go(
-      _.range(1, layerNum + 1),
-      _.map(a => _.go(
-        _.range(1, filed + 1),
-        _.map(b => my_isDrawPosition(b, a) ? drawChar : " "),
-        join('')
-      )),
-      join('\n'),
-      console.log
-    );
+const obj1 = {
+  a: 1,
+  b: undefined,
+  c: 'CC',
+  d: 'DD'
+};
+// a=1&c=CC&d=DD
+function query1(obj) {
+  let res = '';
+  for(const k in obj) {
+    const v = obj[k];
+    if(v === undefined) continue;
+    if(res != '') res += '&';
+    res += k + '=' + v;
+    console.log(k);
   }
-  pyramid(3);
-  pyramid(3, "0");
+  return res;
+}
+console.log("query1: ", query1(obj1));
+
+function query2(obj) {
+  return Object
+  .entries(obj)
+  .reduce((query, [k, v], i) => {
+    if(v === undefined) return query;
+    // return query + (i > 0 ? '&' : '') + k + '=' + v
+    return `${query}${(i > 0 ? '&' : '')}${k}=${v}`;
+  }, '')
+}
+console.log("query: 2", query2(obj1));
+
+
+const join = _.curry((sep, iter) => 
+_.reduce((a, b) => `${a}${sep}${b}`, iter));
+
+
+function query3(obj) {
+  return join('&', 
+      _.map(([k, v]) => `${k}=${v}`,
+        _.reject(([_, v]) => v === undefined,
+          Object.entries(obj1)))
+  );
+}
+console.log("query3: ",query3(obj1));
+
+
+const query4 =_.pipe(
+  Object.entries,
+  _.reject(([_, v]) => v === undefined),
+  _.map(join('=')),
+  join('&'),
+);
+console.log("query4: ", query4(obj1));
 </script>
 
+4.queryToObject
+<script>
+  const split = _.curry((sep, str) => str.split(sep));
+
+  const queryToObject = _.pipe(
+    split('&'),
+    L.map(split('=')),
+    L.map(([k, v]) => ({ [k] : v})),
+    _.reduce(Object.assign)
+  );
+
+  console.log("queryToObject : ", queryToObject("a=1&c=CC&d=DD"));
+</script>
 </body>

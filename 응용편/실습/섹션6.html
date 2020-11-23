@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title># 시간을 이터러블로 다루기</title>
+  <script src="./fx.js"></script>
+</head>
+<body>
+</script>
+# 시간을 이터러블로 다루기
+
+1.range와 take의 재해석
+<script>
+_.go(
+  L.range(10), //- 부터 9까지의 이터러블, 최대 10번 일어날 일
+  L.map(_.delay(1000)),
+  L.filter(a => a % 2),
+  _.take(3),
+  _.each(v => console.log(v, new Date().getSeconds())),
+);
+</script>
+
+2.takeWhile, takeUntil
+<script>
+// [1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0],
+_.go(
+  [1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0],
+  _.takeWhile(a => a), //while 대체로 사용가능, true인 값만 추출
+  _.each(console.log)
+);
+
+_.go(
+  [1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0],
+  _.takeUntil(a => !a), //true를 발견할때까지 담기(발견한 true까지 값을 넣기)
+  _.each(console.log)
+);
+
+_.go(
+  [0, false, undefined, null, 10, 20, 30],
+  _.takeUntil(a => a),
+  _.each(console.log),
+);
+</script>
+
+3.할 일들을 이터러블(리스트)로 바라보기
+<!-- <script>
+/*
+자동차 경주를 하는데 
+ - 조는 트랙에 각 배열로 나누어져 있다.
+ - 트랙에 4명에 선수가 차지 않은 곳은 출발하지 않는다.
+*/
+console.clear();
+const track = [
+  { cars: ['철수', '영희', '철희', '영수'] },
+  { cars: ['하든', '커리', '듀란트', '탐슨'] },
+  { cars: ['폴', '어빙', '릴라드', '맥컬럼'] },
+  { cars: ['스파이더맨', '아이언맨'] },
+  { cars: [] }
+];
+
+_.go(
+  L.range(Infinity),
+  L.map(i => track[i]),
+  L.map(({cars}) => cars),
+  L.map(_.delay(2000)),
+  // L.takeWhile(({length: l}) => l == 4),
+  L.takeUntil(({length: l}) => l < 4),
+  L.flat,
+  L.map(car => `${car} 출발!`),
+  _.each(console.log),
+);
+
+// // 내가 짠것
+// _.go(
+//   track,
+//   _.map(v => Object.values(v).pop()),
+//   _.filter(v => v.length >= 4),
+//   L.map(_.delay(1000)),
+//   _.each(console.log),
+// );
+</script> -->
+
+4. 아임포트 결제 누락 스케쥴러 만들기
+<script>
+const Impt = {
+  payments: {
+    1: [
+      { imp_id: 11, order_id: 1, amount: 15000 },
+      { imp_id: 12, order_id: 2, amount: 25000 },
+      { imp_id: 13, order_id: 3, amount: 10000 },
+    ],
+    2: [
+      { imp_id: 14, order_id: 4, amount: 25000 },
+      { imp_id: 15, order_id: 5, amount: 45000 },
+      { imp_id: 16, order_id: 6, amount: 15000 },
+    ],
+    3: [
+      { imp_id: 17, order_id: 7, amount: 20000 },
+      { imp_id: 18, order_id: 8, amount: 30000 },
+    ],
+    4: [],
+    5: [],
+    //...
+  },
+  getPayments: page => {
+    console.log(`http://..?page=${page}`);
+    return _.delay(1000 * 1, Impt.payments[page]);
+  },
+  cancelPayment: imp_id => Promise.resolve(`${imp_id}: 취소완료`)
+};
+//결제 완료된 값만 출력
+const DB = {
+  getOrders: ids => _.delay(100, [
+    { id: 1 },
+    { id: 3 },
+    { id: 7 },
+  ])
+};
+
+async function job() {
+  // 결제모듈에서 payments 가져온다.
+  // page 단위로 결제데이터가 있을때까지 가져오고, 
+  // 하나로 합친다.
+
+  const payments = await _.go(
+    L.range(1, Infinity),  //언제까지 순환할줄 몰라서 정함
+    L.map(Impt.getPayments),
+    L.takeUntil(({length}) => length < 3),
+    _.flat,
+  );
+  console.log("payments: ", payments);
+
+  // 결제가 실제로 완료된 가맹점 측 주문서 id들을 뽑는다.
+  const order_ids = await _.go(
+    payments,
+    _.map(p => p.order_id),
+    DB.getOrders,
+    _.map(p => p.id),
+  );
+  console.log("order_ids: ", order_ids);
+
+  // 결제모듈의 payments와 가맹점의 주문서를 비교해서
+  // 결제를 취소해야할 id들을 뽑아서
+  // 결제 취소 api를 실행
+  await _.go(
+    payments,
+    L.reject(p => order_ids.includes(p.order_id)),
+    L.map(p => p.imp_id),
+    L.map(Impt.cancelPayment),
+    _.each(console.log)
+  );
+
+  // //내가 한것
+  // await _.go(
+  //   payments,
+  //   _.filter(p => !order_ids.includes(p.order_id)),
+  //   L.map(({imp_id}) => Impt.cancelPayment(imp_id)),
+  //   console.log
+  // );
+}
+// job();
+// 7초에 한 번만 한다.
+// 그런데 만일 job 7초보다 더 걸리면, job이 끝날 때까지
+(function recur() {
+  Promise.all([
+    _.delay(7000, undefined),
+    job(),
+  ]).then(recur);
+})();
+</script>
+
+</body>
+
